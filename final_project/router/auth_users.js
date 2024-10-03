@@ -1,4 +1,4 @@
-const express = require('express');
+ const express = require('express');
 const jwt = require('jsonwebtoken');
 let books = require("./booksdb.js");
 const regd_users = express.Router();
@@ -45,7 +45,7 @@ regd_users.post("/login", (req,res) => {
         // Generate JWT access token
         let accessToken = jwt.sign({
             data: password
-        }, 'access', { expiresIn: 60  });
+        }, 'access', { expiresIn: 24*60*60  });
 
         // Store access token and username in session
         req.session.authorization = {
@@ -63,16 +63,35 @@ const isbn= req.params.isbn;
     const username= req.session.authorization.username;
     console.log(username);
     const reviewList= books[isbn].reviews;
-    let review= req.query.username;
+    let review= req.query.comment;
+    console.log(review);
     if(review){
-        reviewList.username=review;
+        books[isbn].reviews = Object.fromEntries(
+            Object.entries(reviewList).filter(([key, existingReview]) => key !== username)
+        );
+        
+        // Add the new review under the username
+        books[isbn].reviews[username] = review;
+
+    res.send(`Your review was added!`);
+    } else {
+        res.status(400).send('No review provided.');
     }
+});
 
-    books[isbn].reviews = reviewList.filter((review) => {review.username!= username});
-        books[isbn].reviews.push({"username":"review"});
 
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+//Delete a book review
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    const isbn= req.params.isbn;
+    const username= req.session.authorization.username;
+    const reviewList= books[isbn].reviews;
+
+    books[isbn].reviews = Object.fromEntries(
+        Object.entries(reviewList).filter(([key, existingReview]) => key !== username)
+    );
+    res.send(`Your review is deleted!S`)
+
 });
 
 module.exports.authenticated = regd_users;
