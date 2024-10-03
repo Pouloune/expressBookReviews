@@ -59,6 +59,18 @@ regd_users.post("/login", (req,res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
+const isbn= req.params.isbn;
+    const username= req.session.authorization.username;
+    console.log(username);
+    const reviewList= books[isbn].reviews;
+    let review= req.query.username;
+    if(review){
+        reviewList.username=review;
+    }
+
+    books[isbn].reviews = reviewList.filter((review) => {review.username!= username});
+        books[isbn].reviews.push({"username":"review"});
+
   //Write your code here
   return res.status(300).json({message: "Yet to be implemented"});
 });
